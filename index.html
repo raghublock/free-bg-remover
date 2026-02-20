@@ -3,97 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free BG Remover | 100% Free</title>
-    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/bundle.js"></script>
+    <title>Fast AI BG Remover | Bikaner Edition</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f4f7f9; padding: 20px; }
-        .card { background: white; max-width: 600px; margin: auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .upload-box { border: 2px dashed #007bff; padding: 30px; border-radius: 10px; cursor: pointer; background: #fdfdfd; margin-bottom: 20px; }
-        .preview-section { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; }
-        .box { flex: 1; min-width: 250px; background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; }
-        img { width: 100%; border-radius: 5px; display: none; margin-top: 10px; }
-        #processBtn { background: #007bff; color: white; border: none; padding: 15px; width: 100%; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        #processBtn:disabled { background: #ccc; }
-        #loader { display: none; color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
-        .dl-btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; display: inline-block; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
+        .card { background: white; max-width: 600px; margin: auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .upload-area { border: 2px dashed #007bff; padding: 30px; border-radius: 15px; cursor: pointer; background: #f8fbff; margin-bottom: 20px; transition: 0.3s; }
+        .upload-area:hover { background: #eef6ff; }
+        .preview-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 25px; }
+        .box { flex: 1; min-width: 250px; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 12px; }
+        img { width: 100%; border-radius: 8px; display: none; margin-top: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #processBtn { background: #007bff; color: white; border: none; padding: 15px; width: 100%; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #processBtn:hover { background: #0056b3; }
+        #processBtn:disabled { background: #ccc; cursor: not-allowed; }
+        #loader { display: none; color: #007bff; font-weight: bold; margin: 15px 0; padding: 10px; border: 1px solid #007bff; border-radius: 10px; }
+        .dl-btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 12px 25px; border-radius: 30px; margin-top: 15px; font-weight: bold; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>✂️ AI Background Remover</h2>
-    <p>Free & Unlimited</p>
+    <h2>🚀 Super Fast BG Remover</h2>
+    <p>AI Powered - Works on every phone!</p>
 
-    <div class="upload-box" onclick="document.getElementById('inp').click()">
-        <b id="statusText">Click to Upload Image</b>
+    <div class="upload-area" onclick="document.getElementById('inp').click()">
+        <b id="statusText">📁 Click here to Select Photo</b>
         <input type="file" id="inp" accept="image/*" hidden>
     </div>
 
-    <button id="processBtn">Remove Background</button>
-    <div id="loader">AI Model is loading... (It may take 30-40 seconds for the first time)</div>
+    <button id="processBtn">Remove Background Now</button>
+    <div id="loader">⏳ Cloud AI is processing... Please wait!</div>
 
-    <div class="preview-section">
+    <div class="preview-container">
         <div class="box">
             <strong>Original Image</strong>
             <img id="origImg">
-            <p id="origName" style="font-size: 12px;"></p>
+            <p id="origName" style="font-size: 12px; color: #666;"></p>
         </div>
         <div class="box">
-            <strong>Result Image</strong>
+            <strong>Result (Transparent)</strong>
             <img id="resImg">
-            <a id="dl" class="dl-btn" download="no-bg.png" style="display:none;">Download HD</a>
+            <a id="dl" class="dl-btn" target="_blank">📥 Download HD</a>
         </div>
     </div>
 </div>
 
 <script>
+    // Aapka Cloud Name set ho gaya hai
+    const CLOUD_NAME = "doaodzwor"; 
+    const UPLOAD_PRESET = "ml_default"; 
+
     const inp = document.getElementById('inp');
     const origImg = document.getElementById('origImg');
     const resImg = document.getElementById('resImg');
     const btn = document.getElementById('processBtn');
     const loader = document.getElementById('loader');
+    const dl = document.getElementById('dl');
 
     inp.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
             origImg.src = URL.createObjectURL(file);
             origImg.style.display = "block";
-            document.getElementById('origName').innerText = file.name;
-            document.getElementById('statusText').innerText = "Selected: " + file.name;
+            document.getElementById('origName').innerText = "Selected: " + file.name;
+            document.getElementById('statusText').innerText = "Ready: " + file.name;
+            
+            // Purane results hide karein
             resImg.style.display = "none";
-            document.getElementById('dl').style.display = "none";
+            dl.style.display = "none";
         }
     };
 
     btn.onclick = async () => {
-        if (!inp.files[0]) return alert("Please select a photo first!");
+        if (!inp.files[0]) return alert("Bhai, pehle photo toh select kar lo!");
 
         loader.style.display = "block";
         btn.disabled = true;
-        btn.innerText = "Processing...";
+        btn.innerText = "Uploading...";
+
+        const formData = new FormData();
+        formData.append('file', inp.files[0]);
+        formData.append('upload_preset', UPLOAD_PRESET);
 
         try {
-            // Updated Config to prevent loading errors
-            const config = {
-                publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/" 
-            };
-            
-            const blob = await imgly.backgroundRemoval(inp.files[0], config);
-            const url = URL.createObjectURL(blob);
-            
-            resImg.src = url;
+            // Step 1: Upload Image to Cloudinary
+            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await uploadRes.json();
+
+            if(data.error) throw new Error(data.error.message);
+
+            // Step 2: Background Remove Transformation apply karein
+            const publicId = data.public_id;
+            const format = data.format;
+            const finalUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/${publicId}.${format}`;
+
+            // Result dikhayein
+            resImg.src = finalUrl;
             resImg.style.display = "block";
-            document.getElementById('dl').href = url;
-            document.getElementById('dl').style.display = "inline-block";
+            dl.href = finalUrl;
+            dl.style.display = "inline-block";
             
             loader.style.display = "none";
         } catch (err) {
             console.error(err);
-            alert("Error: Internet slow hai ya browser model load nahi kar pa raha. Please refresh karein.");
+            alert("Error: " + err.message + "\n\nTip: Make sure 'Unsigned Upload' is enabled in Cloudinary settings.");
             loader.style.display = "none";
         }
         btn.disabled = false;
-        btn.innerText = "Remove Background";
+        btn.innerText = "Remove Background Now";
     };
 </script>
 
