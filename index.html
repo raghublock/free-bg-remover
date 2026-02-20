@@ -9,12 +9,15 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #eef2f3; padding: 50px 20px; }
         .card { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h1 { color: #333; font-size: 24px; }
-        .upload-area { border: 2px dashed #007bff; padding: 20px; border-radius: 10px; margin-bottom: 20px; cursor: pointer; }
+        .upload-area { border: 2px dashed #007bff; padding: 20px; border-radius: 10px; margin-bottom: 20px; cursor: pointer; transition: 0.3s; }
+        .upload-area:hover { background: #f0f7ff; }
         #processBtn { background: #007bff; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; width: 100%; }
         #processBtn:hover { background: #0056b3; }
-        #status { margin: 15px 0; font-size: 14px; color: #666; display: none; }
-        #outputImg { max-width: 100%; margin-top: 20px; border-radius: 10px; display: none; }
-        .download-btn { background: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; display: none; margin-top: 15px; }
+        #processBtn:disabled { background: #ccc; cursor: not-allowed; }
+        #status { margin: 15px 0; font-size: 14px; color: #666; display: none; background: #fff3cd; padding: 10px; border-radius: 5px; }
+        #outputImg { max-width: 100%; margin-top: 20px; border-radius: 10px; display: none; border: 2px solid #ddd; }
+        .download-btn { background: #28a745; color: white; text-decoration: none; padding: 12px 25px; border-radius: 30px; display: none; margin-top: 15px; font-weight: bold; }
+        .download-btn:hover { background: #218838; }
     </style>
 </head>
 <body>
@@ -29,10 +32,12 @@
     </div>
 
     <button id="processBtn">Remove Background</button>
-    <div id="status">AI Model Load Ho Raha Hai... (Pehli baar mein thoda waqt lag sakta hai)</div>
+    <div id="status">AI Model Load Ho Raha Hai... (Pehli baar mein thoda waqt lagta hai, please wait)</div>
     
-    <img id="outputImg" alt="Result">
-    <a id="dlLink" class="download-btn" download="no-bg.png">Download HD Image</a>
+    <center>
+        <img id="outputImg" alt="Result">
+        <a id="dlLink" class="download-btn" download="no-bg.png">Download HD Image</a>
+    </center>
 </div>
 
 <script>
@@ -44,7 +49,12 @@
     const fileName = document.getElementById('fileName');
 
     fileInput.onchange = (e) => {
-        fileName.innerText = e.target.files[0].name;
+        if (e.target.files[0]) {
+            fileName.innerText = "Selected: " + e.target.files[0].name;
+            // Purana result chhupa dein jab naya file select ho
+            outputImg.style.display = "none";
+            dlLink.style.display = "none";
+        }
     };
 
     processBtn.onclick = async () => {
@@ -53,21 +63,23 @@
 
         status.style.display = "block";
         processBtn.disabled = true;
-        processBtn.innerText = "Processing...";
+        processBtn.innerText = "Processing... Please Wait";
 
         try {
-            // Main AI Magic (Zero Cost)
-            const blob = await imglyRemoveBackground(file);
-            const url = URL.createObjectURL(blob);
+            // Naya Updated Logic: imgly.backgroundRemoval use kar rahe hain
+            const blob = await imgly.backgroundRemoval(file);
             
+            const url = URL.createObjectURL(blob);
             outputImg.src = url;
             outputImg.style.display = "block";
+            
             dlLink.href = url;
             dlLink.style.display = "inline-block";
             
             status.style.display = "none";
         } catch (err) {
-            alert("Error: " + err);
+            console.error(err);
+            alert("Kuch error aaya! Shayad model load nahi ho paya. Ek baar page refresh karke try karein.");
             status.style.display = "none";
         }
         processBtn.disabled = false;
