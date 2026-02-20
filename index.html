@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fast AI BG Remover | Bikaner Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/bundle.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
         .card { background: white; max-width: 600px; margin: auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -17,8 +18,6 @@
         #processBtn:disabled { background: #ccc; cursor: not-allowed; }
         #loader { display: none; color: #007bff; font-weight: bold; margin: 15px 0; padding: 10px; border: 1px solid #007bff; border-radius: 10px; }
         .dl-btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 12px 25px; border-radius: 30px; margin-top: 15px; font-weight: bold; display: inline-block; }
-        
-        /* New Share Button Style */
         .share-btn { background: #25D366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 30px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 14px; }
         .privacy-box { margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; text-align: left; }
     </style>
@@ -27,7 +26,7 @@
 
 <div class="card">
     <h2>🚀 Super Fast BG Remover</h2>
-    <p>AI Powered - Works on every phone!</p>
+    <p>AI Powered - Unlimited & Free</p>
 
     <div class="upload-area" onclick="document.getElementById('inp').click()">
         <b id="statusText">📁 Click here to Select Photo</b>
@@ -35,7 +34,7 @@
     </div>
 
     <button id="processBtn">Remove Background Now</button>
-    <div id="loader">⏳ Cloud AI is processing... Please wait!</div>
+    <div id="loader">⏳ AI is processing... Please wait!</div>
 
     <div class="preview-container">
         <div class="box">
@@ -50,9 +49,7 @@
         </div>
     </div>
 
-    <a id="whatsappShare" href="#" class="share-btn">
-        <span>Share on WhatsApp</span>
-    </a>
+    <a id="whatsappShare" href="#" class="share-btn">Share on WhatsApp</a>
 
     <div class="privacy-box">
         <p style="font-size: 12px; color: #888; line-height: 1.5; margin: 0;">
@@ -64,6 +61,7 @@
 </div>
 
 <script>
+    // --- APNA PURANA CLOUDINARY LOGIC (UNAFFECTED) ---
     const CLOUD_NAME = "doaodzwor"; 
     const UPLOAD_PRESET = "ml_default"; 
 
@@ -74,10 +72,8 @@
     const loader = document.getElementById('loader');
     const dl = document.getElementById('dl');
 
-    // WhatsApp Share Link Setup
     const shareBtn = document.getElementById('whatsappShare');
-    const currentUrl = window.location.href;
-    shareBtn.href = `https://api.whatsapp.com/send?text=Yaar ye mast free AI tool dekho, ek click mein background hatayein: ${currentUrl}`;
+    shareBtn.href = `https://api.whatsapp.com/send?text=Yaar ye mast free AI tool dekho, ek click mein background hatayein: ${window.location.href}`;
 
     inp.onchange = (e) => {
         const file = e.target.files[0];
@@ -92,43 +88,53 @@
     };
 
     btn.onclick = async () => {
-        if (!inp.files[0]) return alert("Bhai, pehle photo toh select kar lo!");
+        const file = inp.files[0];
+        if (!file) return alert("Bhai, pehle photo toh select kar lo!");
 
         loader.style.display = "block";
         btn.disabled = true;
-        btn.innerText = "Uploading...";
 
-        const formData = new FormData();
-        formData.append('file', inp.files[0]);
-        formData.append('upload_preset', UPLOAD_PRESET);
-
+        // --- STEP 1: Pehle Browser-based AI try karein (SAVES CREDITS) ---
         try {
-            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await uploadRes.json();
-
-            if(data.error) throw new Error(data.error.message);
-
-            const publicId = data.public_id;
-            const format = data.format;
-            const finalUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/${publicId}.${format}`;
-
-            resImg.src = finalUrl;
-            resImg.style.display = "block";
-            dl.href = finalUrl;
-            dl.style.display = "inline-block";
+            loader.innerText = "Processing (Mode: Fast)...";
+            const config = { publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/" };
+            const blob = await imgly.backgroundRemoval(file, config);
+            const url = URL.createObjectURL(blob);
+            showResult(url);
+        } 
+        catch (err) {
+            // --- STEP 2: Agar error aaye toh PURANA CLOUDINARY LOGIC chalu ho jayega ---
+            console.log("Switching to Cloud AI...");
+            loader.innerText = "Enhancing Results (Mode: Cloud)...";
             
-            loader.style.display = "none";
-        } catch (err) {
-            console.error(err);
-            alert("Error: " + err.message);
-            loader.style.display = "none";
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+
+                const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await uploadRes.json();
+                const finalUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/${data.public_id}.${data.format}`;
+                showResult(finalUrl);
+            } catch (cloudErr) {
+                alert("Error: Internet slow hai ya upload fail hua!");
+            }
         }
+        
+        loader.style.display = "none";
         btn.disabled = false;
         btn.innerText = "Remove Background Now";
     };
+
+    function showResult(url) {
+        resImg.src = url;
+        resImg.style.display = "block";
+        dl.href = url;
+        dl.style.display = "inline-block";
+    }
 </script>
 
 </body>
