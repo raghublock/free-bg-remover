@@ -4,47 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Free BG Remover | Instant Background Removal</title>
-    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@latest/dist/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/bundle.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
-        .card { background: white; max-width: 600px; margin: auto; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card { background: white; max-width: 650px; margin: auto; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .upload-area { border: 2px dashed #007bff; padding: 20px; border-radius: 10px; cursor: pointer; margin-bottom: 20px; background: #f8fbff; }
         .preview-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
-        .preview-box { flex: 1; min-width: 200px; max-width: 250px; }
-        .preview-box img { width: 100%; border-radius: 10px; border: 1px solid #ddd; display: none; }
-        .preview-box p { font-size: 12px; color: #555; margin-top: 5px; word-break: break-all; }
-        #processBtn { background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; }
+        .preview-box { flex: 1; min-width: 250px; background: #fafafa; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+        .preview-box img { width: 100%; border-radius: 8px; display: none; margin-top: 10px; }
+        #processBtn { background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; margin-top: 10px; }
         #processBtn:disabled { background: #ccc; }
-        #status { display: none; background: #fff3cd; padding: 10px; border-radius: 8px; margin: 15px 0; font-size: 14px; }
-        .download-btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 10px 20px; border-radius: 20px; margin-top: 10px; font-weight: bold; }
+        #status { display: none; background: #fff3cd; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 14px; border: 1px solid #ffeeba; }
+        .download-btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 12px 20px; border-radius: 25px; margin-top: 15px; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>✂️ Free Background Remover</h2>
-    <p>Upload any photo to remove background for free</p>
+    <p>Upload any photo to remove background (100% Free)</p>
 
     <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <p id="fileName">Click to Upload Image</p>
+        <p id="fileNameText">Click to Upload Image</p>
         <input type="file" id="fileInput" accept="image/*" hidden>
     </div>
 
     <button id="processBtn">Remove Background</button>
 
-    <div id="status">AI Model is loading... Please wait (First time takes 30-60 sec)</div>
+    <div id="status"><b>Pehli baar AI Model load ho raha hai...</b><br>Isme 30-60 seconds lag sakte hain, please page ko band na karein.</div>
 
     <div class="preview-container">
         <div class="preview-box">
-            <h4 id="origTitle" style="display:none;">Original Image</h4>
+            <strong>Original Image</strong>
             <img id="inputPreview" alt="Input">
-            <p id="inputName"></p>
+            <p id="inputNameDisplay" style="font-size: 12px; margin-top: 5px;"></p>
         </div>
 
         <div class="preview-box">
-            <h4 id="resTitle" style="display:none;">Result Image</h4>
+            <strong>Result Image</strong>
             <img id="outputImg" alt="Result">
-            <a id="dlLink" class="download-btn" download="removed_bg.png">Download HD</a>
+            <a id="dlLink" class="download-btn" download="removed_bg.png" style="display:none;">Download HD</a>
         </div>
     </div>
 </div>
@@ -52,57 +51,60 @@
 <script>
     const fileInput = document.getElementById('fileInput');
     const inputPreview = document.getElementById('inputPreview');
-    const inputName = document.getElementById('inputName');
+    const inputNameDisplay = document.getElementById('inputNameDisplay');
     const outputImg = document.getElementById('outputImg');
     const processBtn = document.getElementById('processBtn');
     const status = document.getElementById('status');
     const dlLink = document.getElementById('dlLink');
+    const fileNameText = document.getElementById('fileNameText');
 
     fileInput.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Show Original Preview
             const reader = new FileReader();
             reader.onload = (event) => {
                 inputPreview.src = event.target.result;
                 inputPreview.style.display = "block";
-                document.getElementById('origTitle').style.display = "block";
             };
             reader.readAsDataURL(file);
             
-            inputName.innerText = file.name;
-            fileName.innerText = "Selected: " + file.name;
+            inputNameDisplay.innerText = "Name: " + file.name;
+            fileNameText.innerText = "Selected: " + file.name;
             
-            // Hide previous results
+            // Purane result ko hide karein
             outputImg.style.display = "none";
             dlLink.style.display = "none";
-            document.getElementById('resTitle').style.display = "none";
         }
     };
 
     processBtn.onclick = async () => {
         const file = fileInput.files[0];
-        if (!file) return alert("Pehle photo select karein!");
+        if (!file) return alert("Pehle koi photo toh chuno!");
 
         status.style.display = "block";
         processBtn.disabled = true;
-        processBtn.innerText = "Processing...";
+        processBtn.innerText = "Processing Image...";
 
         try {
-            const blob = await imgly.backgroundRemoval(file);
-            const url = URL.createObjectURL(blob);
+            // Updated: imgly.backgroundRemoval setup
+            const blob = await imgly.backgroundRemoval(file, {
+                progress: (current, total) => {
+                    processBtn.innerText = `Processing: ${Math.round((current/total)*100)}%`;
+                }
+            });
             
+            const url = URL.createObjectURL(blob);
             outputImg.src = url;
             outputImg.style.display = "block";
-            document.getElementById('resTitle').style.display = "block";
             
             dlLink.href = url;
-            dlLink.style.display = "inline-block";
+            dlLink.style.display = "block";
             
             status.style.display = "none";
+            processBtn.innerText = "Remove Background";
         } catch (err) {
-            console.error(err);
-            alert("Error: Try refreshing the page.");
+            console.error("AI Error:", err);
+            alert("Error: AI Model load hone mein fail hua. Please page ko refresh karein aur 10-15 seconds ruk kar try karein.");
             status.style.display = "none";
         }
         processBtn.disabled = false;
