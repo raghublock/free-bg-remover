@@ -17,6 +17,10 @@
         #processBtn:disabled { background: #ccc; cursor: not-allowed; }
         #loader { display: none; color: #007bff; font-weight: bold; margin: 15px 0; padding: 10px; border: 1px solid #007bff; border-radius: 10px; }
         .dl-btn { display: none; background: #28a745; color: white; text-decoration: none; padding: 12px 25px; border-radius: 30px; margin-top: 15px; font-weight: bold; display: inline-block; }
+        
+        /* New Share Button Style */
+        .share-btn { background: #25D366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 30px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 14px; }
+        .privacy-box { margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; text-align: left; }
     </style>
 </head>
 <body>
@@ -45,10 +49,21 @@
             <a id="dl" class="dl-btn" target="_blank">📥 Download HD</a>
         </div>
     </div>
+
+    <a id="whatsappShare" href="#" class="share-btn">
+        <span>Share on WhatsApp</span>
+    </a>
+
+    <div class="privacy-box">
+        <p style="font-size: 12px; color: #888; line-height: 1.5; margin: 0;">
+            <strong>🔒 Privacy Note:</strong> Hum aapki photos ko save nahi karte hain. 
+            Saari images temporary process hoti hain aur kaam khatam hote hi delete ho jati hain. 
+            Aapka data 100% safe hai.
+        </p>
+    </div>
 </div>
 
 <script>
-    // Aapka Cloud Name set ho gaya hai
     const CLOUD_NAME = "doaodzwor"; 
     const UPLOAD_PRESET = "ml_default"; 
 
@@ -59,6 +74,11 @@
     const loader = document.getElementById('loader');
     const dl = document.getElementById('dl');
 
+    // WhatsApp Share Link Setup
+    const shareBtn = document.getElementById('whatsappShare');
+    const currentUrl = window.location.href;
+    shareBtn.href = `https://api.whatsapp.com/send?text=Yaar ye mast free AI tool dekho, ek click mein background hatayein: ${currentUrl}`;
+
     inp.onchange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -66,8 +86,6 @@
             origImg.style.display = "block";
             document.getElementById('origName').innerText = "Selected: " + file.name;
             document.getElementById('statusText').innerText = "Ready: " + file.name;
-            
-            // Purane results hide karein
             resImg.style.display = "none";
             dl.style.display = "none";
         }
@@ -85,7 +103,6 @@
         formData.append('upload_preset', UPLOAD_PRESET);
 
         try {
-            // Step 1: Upload Image to Cloudinary
             const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
                 method: 'POST',
                 body: formData
@@ -94,12 +111,10 @@
 
             if(data.error) throw new Error(data.error.message);
 
-            // Step 2: Background Remove Transformation apply karein
             const publicId = data.public_id;
             const format = data.format;
             const finalUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/e_background_removal/${publicId}.${format}`;
 
-            // Result dikhayein
             resImg.src = finalUrl;
             resImg.style.display = "block";
             dl.href = finalUrl;
@@ -108,7 +123,7 @@
             loader.style.display = "none";
         } catch (err) {
             console.error(err);
-            alert("Error: " + err.message + "\n\nTip: Make sure 'Unsigned Upload' is enabled in Cloudinary settings.");
+            alert("Error: " + err.message);
             loader.style.display = "none";
         }
         btn.disabled = false;
